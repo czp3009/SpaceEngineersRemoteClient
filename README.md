@@ -1,5 +1,5 @@
 # SpaceEngineers Remote Client
-Manager your SpaceEngineers dedicated server with Android phone!
+Manage your SpaceEngineers dedicated server with Android phone!
 
 # Usage
 //TODO
