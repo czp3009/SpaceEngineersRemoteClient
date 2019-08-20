@@ -49,7 +49,10 @@ dependencies {
 
 //anko
 dependencies {
-    implementation "org.jetbrains.anko:anko:$anko_version"
+    // https://mvnrepository.com/artifact/org.jetbrains.anko/anko
+    implementation group: 'org.jetbrains.anko', name: 'anko', version: anko_version
+    // https://mvnrepository.com/artifact/org.jetbrains.anko/anko-design
+    implementation group: 'org.jetbrains.anko', name: 'anko-design', version: anko_version
 }
 
 //space-engineers
