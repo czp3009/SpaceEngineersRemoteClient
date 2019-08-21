@@ -1,7 +1,5 @@
 apply plugin: 'com.android.application'
-
 apply plugin: 'kotlin-android'
-
 apply plugin: 'kotlin-android-extensions'
 
 android {
@@ -33,7 +31,10 @@ android {
 
 //kotlin
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    // https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-stdlib-jdk8
+    implementation group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib-jdk8'
+    // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-android
+    implementation group: 'org.jetbrains.kotlinx', name: 'kotlinx-coroutines-android', version: kotlin_coroutines_version
 }
 
 //android
