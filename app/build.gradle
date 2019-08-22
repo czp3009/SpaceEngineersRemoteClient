@@ -54,6 +54,8 @@ dependencies {
     implementation group: 'org.jetbrains.anko', name: 'anko', version: anko_version
     // https://mvnrepository.com/artifact/org.jetbrains.anko/anko-design
     implementation group: 'org.jetbrains.anko', name: 'anko-design', version: anko_version
+    // https://mvnrepository.com/artifact/org.jetbrains.anko/anko-recyclerview-v7
+    implementation group: 'org.jetbrains.anko', name: 'anko-recyclerview-v7', version: anko_version
 }
 
 //space-engineers

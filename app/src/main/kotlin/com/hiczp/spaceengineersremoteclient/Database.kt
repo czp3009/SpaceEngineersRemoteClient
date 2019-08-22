@@ -48,7 +48,3 @@ private val profileParser = classParser<Profile>()
 fun SQLiteDatabase.findAll() = select(tableName).exec {
     parseList(profileParser)
 }
-
-fun SQLiteDatabase.findById(id: Int) = select(tableName).whereSimple("id=?", id.toString()).exec {
-    parseSingle(profileParser)
-}
