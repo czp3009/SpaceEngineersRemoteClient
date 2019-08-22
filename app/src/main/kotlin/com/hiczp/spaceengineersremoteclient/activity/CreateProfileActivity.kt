@@ -7,11 +7,15 @@ import android.text.InputFilter
 import android.text.InputType
 import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
+import com.hiczp.spaceengineersremoteclient.Profile
 import com.hiczp.spaceengineersremoteclient.database
+import com.hiczp.spaceengineersremoteclient.extension.value
 import com.hiczp.spaceengineersremoteclient.layout.defaultAppBar
+import com.hiczp.spaceengineersremoteclient.save
 import org.jetbrains.anko.*
-import org.jetbrains.anko.db.insert
 import org.jetbrains.anko.sdk27.coroutines.onClick
+import java.util.*
+import javax.crypto.spec.SecretKeySpec
 
 @SuppressLint("SetTextI18n")
 class CreateProfileActivity : AppCompatActivity() {
@@ -51,25 +55,41 @@ class CreateProfileActivity : AppCompatActivity() {
                 securityKey = editText()
 
                 button("Save").onClick {
-                    securityKey.validate()
-                    with(port) {
-                        if (text.isEmpty() || text.toString().toInt() !in 1..65535) {
-                            error = "Port must in range 1..65535"
-                            requestFocus()
+                    runCatching {
+                        name.validate()
+                        domain.validate()
+                        with(port) {
+                            validate()
+                            val range = 1..65535
+                            if (value.toInt() !in range) {
+                                error = "Port must in $range"
+                                requestFocus()
+                                error("")
+                            }
                         }
+                        with(securityKey) {
+                            validate()
+                            try {
+                                SecretKeySpec(Base64.getDecoder().decode(value), "HmacSHA1")
+                            } catch (e: Exception) {
+                                error = "Invalid SHA1 secretKey"
+                                requestFocus()
+                                throw e
+                            }
+                        }
+                    }.onFailure {
+                        return@onClick
                     }
-                    domain.validate()
-                    name.validate()
-
                     database.use {
-                        insert(
-                            "profile",
-                            "name" to name.text.toString(),
-                            "url" to "http://${domain.text}",
-                            "port" to port.text.toString().toInt(),
-                            "securityKey" to securityKey.toString()
+                        save(
+                            Profile(
+                                name = name.value,
+                                url = "http://${domain.value}:${port.value}",
+                                securityKey = securityKey.value
+                            )
                         )
                     }
+                    finish()
                 }
             }
         }
@@ -80,5 +100,6 @@ private fun EditText.validate() {
     if (text.isEmpty()) {
         error = "Must be not empty"
         requestFocus()
+        error("")
     }
 }
