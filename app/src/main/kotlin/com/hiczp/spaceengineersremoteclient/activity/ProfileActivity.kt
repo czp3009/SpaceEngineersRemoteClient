@@ -1,6 +1,7 @@
 package com.hiczp.spaceengineersremoteclient.activity
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.graphics.Color
 import android.os.Bundle
 import android.text.InputFilter
@@ -12,6 +13,7 @@ import com.hiczp.spaceengineersremoteclient.database
 import com.hiczp.spaceengineersremoteclient.extension.value
 import com.hiczp.spaceengineersremoteclient.layout.defaultAppBar
 import com.hiczp.spaceengineersremoteclient.save
+import io.ktor.http.Url
 import org.jetbrains.anko.*
 import org.jetbrains.anko.sdk27.coroutines.onClick
 import java.util.*
@@ -27,6 +29,13 @@ class ProfileActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val savedProfile = intent.extras?.get("profile") as? Profile
+        val (savedHost, savedPort) = if (savedProfile != null) {
+            Url(savedProfile.url).run {
+                host to port
+            }
+        } else {
+            null to null
+        }
 
         verticalLayout {
             defaultAppBar()
@@ -36,6 +45,8 @@ class ProfileActivity : AppCompatActivity() {
 
                 textView("Name:")
                 name = editText {
+                    maxLines = 1
+                    inputType = InputType.TYPE_CLASS_TEXT
                     setText(savedProfile?.name)
                 }
 
@@ -45,19 +56,24 @@ class ProfileActivity : AppCompatActivity() {
                         textColor = Color.BLACK
                     }
                     domain = editText {
-                        setText(savedProfile?.url?.substringAfter("http://"))
+                        maxLines = 1
+                        inputType = InputType.TYPE_CLASS_TEXT
+                        setText(savedHost)
                     }.lparams(matchParent)
                 }
 
                 textView("Port:")
                 port = editText {
                     inputType = InputType.TYPE_CLASS_NUMBER
+                    maxLines = 1
                     filters += InputFilter.LengthFilter(5)
-                    setText(savedProfile?.url?.substringAfterLast(":") ?: "8080")
+                    setText(savedPort?.toString() ?: "8080")
                 }
 
                 textView("Security Key:")
                 securityKey = editText {
+                    maxLines = 1
+                    inputType = InputType.TYPE_CLASS_TEXT
                     setText(savedProfile?.securityKey)
                 }
 
@@ -92,7 +108,7 @@ class ProfileActivity : AppCompatActivity() {
                         }
                         return@onClick
                     }
-                    database.use {
+                    val newProfile = database.use {
                         save(
                             Profile(
                                 id = savedProfile?.id,
@@ -102,10 +118,18 @@ class ProfileActivity : AppCompatActivity() {
                             )
                         )
                     }
+                    setResult(
+                        Activity.RESULT_OK,
+                        intentFor<MainActivity>(returnValue to newProfile)
+                    )
                     finish()
                 }
             }
         }
+    }
+
+    companion object {
+        const val returnValue = "newProfile"
     }
 }
 

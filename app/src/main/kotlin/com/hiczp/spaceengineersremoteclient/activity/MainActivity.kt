@@ -1,5 +1,7 @@
 package com.hiczp.spaceengineersremoteclient.activity
 
+import android.app.Activity
+import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.view.View
@@ -17,12 +19,18 @@ import org.jetbrains.anko.*
 import org.jetbrains.anko.design.appBarLayout
 import org.jetbrains.anko.recyclerview.v7.recyclerView
 import org.jetbrains.anko.sdk27.coroutines.onClick
+import org.jetbrains.anko.sdk27.coroutines.onLongClick
+
+private const val CREATE_REQUEST_CODE = 0
+private const val MODIFY_REQUEST_CODE = 1
 
 class MainActivity : AppCompatActivity() {
-    private val profiles = database.use { findAll() }
+    private val profiles = mutableListOf<Profile>()
+    private lateinit var recyclerView: RecyclerView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        profiles.addAll(database.use { findAll() })
 
         verticalLayout {
             appBarLayout {
@@ -30,14 +38,33 @@ class MainActivity : AppCompatActivity() {
                     imageButton(R.drawable.ic_add_white_24dp) {
                         backgroundColor = Color.TRANSPARENT
                     }.onClick {
-                        startActivity<ProfileActivity>()
+                        startActivityForResult<ProfileActivity>(CREATE_REQUEST_CODE)
                     }
                 }
             }
 
-            recyclerView {
+            recyclerView = recyclerView {
                 layoutManager = LinearLayoutManager(context)
-                adapter = ProfileListAdapter(profiles)
+                adapter = ProfileListAdapter(this@MainActivity, profiles)
+            }
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (resultCode != Activity.RESULT_OK) return
+        val newProfile = data!!.extras!!.get(ProfileActivity.returnValue) as Profile
+        val adapter = recyclerView.adapter!!
+        when (requestCode) {
+            CREATE_REQUEST_CODE -> {
+                val lastIndex = profiles.size
+                profiles.add(newProfile)
+                adapter.notifyItemInserted(lastIndex)
+                recyclerView.smoothScrollToPosition(lastIndex)
+            }
+            MODIFY_REQUEST_CODE -> {
+                val index = profiles.indexOfFirst { it.id == newProfile.id }
+                profiles[index] = newProfile
+                adapter.notifyItemChanged(index)
             }
         }
     }
@@ -52,9 +79,11 @@ private class ProfileUI : AnkoComponent<ViewGroup> {
     override fun createView(ui: AnkoContext<ViewGroup>) = with(ui) {
         verticalLayout {
             padding = dip(12)
+            lparams(matchParent)
 
             textView {
                 id = nameId
+                textSize = 18f
                 textColor = Color.BLACK
             }
             textView {
@@ -65,6 +94,7 @@ private class ProfileUI : AnkoComponent<ViewGroup> {
 }
 
 private class ProfileListAdapter(
+    val activity: Activity,
     val profiles: List<Profile>
 ) : RecyclerView.Adapter<ProfileListAdapter.ProfileViewHolder>() {
     override fun getItemCount() = profiles.size
@@ -73,11 +103,15 @@ private class ProfileListAdapter(
         ProfileViewHolder(ProfileUI().createView(AnkoContext.create(parent.context, parent)))
 
     override fun onBindViewHolder(holder: ProfileViewHolder, position: Int) {
-        with(profiles[position]) {
-            holder.name.text = name
-            holder.url.text = url
-            holder.itemView.onClick {
-
+        val profile = profiles[position]
+        with(holder) {
+            name.text = profile.name
+            url.text = profile.url
+            itemView.onLongClick {
+                activity.startActivityForResult<ProfileActivity>(
+                    MODIFY_REQUEST_CODE,
+                    "profile" to profile
+                )
             }
         }
     }
