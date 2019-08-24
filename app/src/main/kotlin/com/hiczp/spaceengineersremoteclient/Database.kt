@@ -52,3 +52,5 @@ private val profileParser = classParser<Profile>()
 fun SQLiteDatabase.findAll() = select(tableName).exec {
     parseList(profileParser)
 }
+
+fun SQLiteDatabase.deleteById(id: Long) = delete(tableName, "id=?", arrayOf(id.toString()))

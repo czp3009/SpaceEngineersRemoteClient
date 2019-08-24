@@ -1,6 +1,5 @@
 package com.hiczp.spaceengineersremoteclient.activity
 
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.graphics.Color
 import android.os.Bundle
@@ -19,7 +18,6 @@ import org.jetbrains.anko.sdk27.coroutines.onClick
 import java.util.*
 import javax.crypto.spec.SecretKeySpec
 
-@SuppressLint("SetTextI18n")
 class ProfileActivity : AppCompatActivity() {
     private lateinit var name: EditText
     private lateinit var domain: EditText
@@ -28,7 +26,7 @@ class ProfileActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val savedProfile = intent.extras?.get("profile") as? Profile
+        val savedProfile = intent.extras?.get(inputValue) as? Profile
         val (savedHost, savedPort) = if (savedProfile != null) {
             Url(savedProfile.url).run {
                 host to port
@@ -45,8 +43,7 @@ class ProfileActivity : AppCompatActivity() {
 
                 textView("Name:")
                 name = editText {
-                    maxLines = 1
-                    inputType = InputType.TYPE_CLASS_TEXT
+                    singleLine = true
                     setText(savedProfile?.name)
                 }
 
@@ -56,8 +53,7 @@ class ProfileActivity : AppCompatActivity() {
                         textColor = Color.BLACK
                     }
                     domain = editText {
-                        maxLines = 1
-                        inputType = InputType.TYPE_CLASS_TEXT
+                        singleLine = true
                         setText(savedHost)
                     }.lparams(matchParent)
                 }
@@ -65,15 +61,14 @@ class ProfileActivity : AppCompatActivity() {
                 textView("Port:")
                 port = editText {
                     inputType = InputType.TYPE_CLASS_NUMBER
-                    maxLines = 1
+                    singleLine = true
                     filters += InputFilter.LengthFilter(5)
                     setText(savedPort?.toString() ?: "8080")
                 }
 
                 textView("Security Key:")
                 securityKey = editText {
-                    maxLines = 1
-                    inputType = InputType.TYPE_CLASS_TEXT
+                    singleLine = true
                     setText(savedProfile?.securityKey)
                 }
 
@@ -89,7 +84,7 @@ class ProfileActivity : AppCompatActivity() {
                             val range = 1..65535
                             if (value.toInt() !in range) throw ValidationException(
                                 this,
-                                "Port must in $range"
+                                "Port must in range $range"
                             )
                         }
                         with(securityKey) {
@@ -129,6 +124,7 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     companion object {
+        const val inputValue = "profile"
         const val returnValue = "newProfile"
     }
 }

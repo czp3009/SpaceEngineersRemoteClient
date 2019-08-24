@@ -6,14 +6,12 @@ import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.hiczp.spaceengineersremoteclient.Profile
-import com.hiczp.spaceengineersremoteclient.R
-import com.hiczp.spaceengineersremoteclient.database
-import com.hiczp.spaceengineersremoteclient.findAll
+import com.hiczp.spaceengineersremoteclient.*
 import com.hiczp.spaceengineersremoteclient.layout.defaultToolBar
 import org.jetbrains.anko.*
 import org.jetbrains.anko.design.appBarLayout
@@ -74,20 +72,30 @@ private class ProfileUI : AnkoComponent<ViewGroup> {
     companion object {
         const val nameId = 0
         const val urlId = 1
+        const val deleteId = 2
     }
 
     override fun createView(ui: AnkoContext<ViewGroup>) = with(ui) {
-        verticalLayout {
-            padding = dip(12)
+        relativeLayout {
             lparams(matchParent)
+            padding = dip(12)
 
-            textView {
-                id = nameId
-                textSize = 18f
-                textColor = Color.BLACK
+            verticalLayout {
+                textView {
+                    id = nameId
+                    textSize = 18f
+                    textColor = Color.BLACK
+                }
+                textView {
+                    id = urlId
+                }
+            }.lparams {
+                alignParentLeft()
             }
-            textView {
-                id = urlId
+            button("Delete") {
+                id = deleteId
+            }.lparams {
+                alignParentRight()
             }
         }
     }
@@ -95,7 +103,7 @@ private class ProfileUI : AnkoComponent<ViewGroup> {
 
 private class ProfileListAdapter(
     val activity: Activity,
-    val profiles: List<Profile>
+    val profiles: MutableList<Profile>
 ) : RecyclerView.Adapter<ProfileListAdapter.ProfileViewHolder>() {
     override fun getItemCount() = profiles.size
 
@@ -107,10 +115,19 @@ private class ProfileListAdapter(
         with(holder) {
             name.text = profile.name
             url.text = profile.url
+            delete.onClick {
+                database.use { deleteById(profile.id!!) }
+                val index = profiles.indexOfFirst { it.id == profile.id }
+                profiles.removeAt(index)
+                notifyItemRemoved(index)
+            }
+            itemView.onClick {
+                activity.startActivity<VRageActivity>(VRageActivity.inputValue to profile)
+            }
             itemView.onLongClick {
                 activity.startActivityForResult<ProfileActivity>(
                     MODIFY_REQUEST_CODE,
-                    "profile" to profile
+                    ProfileActivity.inputValue to profile
                 )
             }
         }
@@ -119,5 +136,6 @@ private class ProfileListAdapter(
     class ProfileViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val name = itemView.findViewById<TextView>(ProfileUI.nameId)!!
         val url = itemView.findViewById<TextView>(ProfileUI.urlId)!!
+        val delete = itemView.findViewById<Button>(ProfileUI.deleteId)!!
     }
 }
