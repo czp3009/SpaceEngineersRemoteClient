@@ -19,11 +19,6 @@ import java.util.*
 import javax.crypto.spec.SecretKeySpec
 
 class ProfileActivity : AppCompatActivity() {
-    private lateinit var name: EditText
-    private lateinit var domain: EditText
-    private lateinit var port: EditText
-    private lateinit var securityKey: EditText
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val savedProfile = intent.extras?.get(inputValue) as? Profile
@@ -35,6 +30,10 @@ class ProfileActivity : AppCompatActivity() {
             null to null
         }
 
+        lateinit var name: EditText
+        lateinit var domain: EditText
+        lateinit var port: EditText
+        lateinit var securityKey: EditText
         verticalLayout {
             defaultAppBar()
 
@@ -129,7 +128,7 @@ class ProfileActivity : AppCompatActivity() {
     }
 }
 
-class ValidationException(
+private class ValidationException(
     private val editText: EditText,
     private val errorMessage: String
 ) : IllegalStateException() {

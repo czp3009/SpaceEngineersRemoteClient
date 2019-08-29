@@ -14,8 +14,7 @@ android {
     }
     buildTypes {
         release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            minifyEnabled true
         }
     }
     packagingOptions {
@@ -26,6 +25,9 @@ android {
     }
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
+    }
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8
     }
 }
 
@@ -48,6 +50,21 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 }
 
+//android-viewmodel
+dependencies {
+    implementation "androidx.lifecycle:lifecycle-common-java8:$lifecycle_version"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
+    implementation "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version"
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version"
+    implementation "androidx.lifecycle:lifecycle-extensions:$lifecycle_version"
+}
+
+//android-navigation
+dependencies {
+    implementation "androidx.navigation:navigation-fragment-ktx:$navigation_version"
+    implementation "androidx.navigation:navigation-ui-ktx:$navigation_version"
+}
+
 //anko
 dependencies {
     // https://mvnrepository.com/artifact/org.jetbrains.anko/anko
@@ -61,5 +78,11 @@ dependencies {
 //space-engineers
 dependencies {
     // https://mvnrepository.com/artifact/com.hiczp/space-engineers-remote-api
-    implementation group: 'com.hiczp', name: 'space-engineers-remote-api', version: '0.1'
+    implementation group: 'com.hiczp', name: 'space-engineers-remote-api', version: '0.1.1'
+}
+
+//log
+dependencies {
+    // https://mvnrepository.com/artifact/com.github.tony19/logback-android
+    debugImplementation group: 'com.github.tony19', name: 'logback-android', version: '2.0.0'
 }

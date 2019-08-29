@@ -5,8 +5,6 @@ import android.database.sqlite.SQLiteDatabase
 import org.jetbrains.anko.db.*
 import java.io.Serializable
 
-private const val tableName = "profile"
-
 data class Profile(
     var id: Long? = null,
     val name: String,
@@ -14,7 +12,14 @@ data class Profile(
     val securityKey: String
 ) : Serializable
 
-class DatabaseHelper(context: Context) : ManagedSQLiteOpenHelper(context, "database") {
+private const val databaseName = "database"
+private const val tableName = "profile"
+
+class DatabaseHelper(context: Context) : ManagedSQLiteOpenHelper(
+    ctx = context,
+    name = databaseName,
+    version = 1
+) {
     override fun onCreate(db: SQLiteDatabase) {
         db.createTable(
             tableName, true,

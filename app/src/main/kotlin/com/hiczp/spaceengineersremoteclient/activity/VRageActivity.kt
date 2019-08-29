@@ -2,32 +2,33 @@ package com.hiczp.spaceengineersremoteclient.activity
 
 import android.graphics.Color
 import android.os.Bundle
-import android.widget.TextView
 import android.widget.Toolbar
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.*
 import com.hiczp.spaceengineers.remoteapi.SpaceEngineersRemoteClient
+import com.hiczp.spaceengineers.remoteapi.service.server.Status
 import com.hiczp.spaceengineersremoteclient.Profile
-import com.hiczp.spaceengineersremoteclient.extension.emptyCoroutineExceptionHandler
-import com.hiczp.spaceengineersremoteclient.extension.value
-import io.ktor.client.features.ClientRequestException
-import kotlinx.coroutines.*
+import com.hiczp.spaceengineersremoteclient.extension.error
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.jetbrains.anko.*
 import org.jetbrains.anko.design.appBarLayout
-import org.jetbrains.anko.sdk27.coroutines.onClick
+
+private val logger = AnkoLogger<VRageActivity>()
 
 class VRageActivity : AppCompatActivity() {
-    private lateinit var spaceEngineersRemoteClient: SpaceEngineersRemoteClient
-    private lateinit var toolbar: Toolbar
-    private lateinit var chatTextView: TextView
-    private var heartbeatJob: Job? = null
-    private var messageJob: Job? = null
+    private lateinit var model: VRageViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val profile = intent.extras!![inputValue] as Profile
-        spaceEngineersRemoteClient = SpaceEngineersRemoteClient(profile.url, profile.securityKey)
+        model = ViewModelProvider(this)[VRageViewModel::class.java].apply {
+            init(profile)
+        }
 
+        lateinit var toolbar: Toolbar
         verticalLayout {
             appBarLayout {
                 toolbar = toolbar {
@@ -38,93 +39,50 @@ class VRageActivity : AppCompatActivity() {
                     subtitle = "Connecting..."
                 }
             }
-
-            verticalLayout {
-                horizontalPadding = dip(8)
-
-                scrollView {
-                    chatTextView = textView {
-                        textColor = Color.BLACK
-                    }
-                }
-
-                linearLayout {
-                    val chatEditText = editText {
-                        singleLine = true
-                    }.lparams(weight = 1f)
-                    button("Send").onClick {
-                        val text = chatEditText.value
-                        chatEditText.setText("")
-                        CoroutineScope(IO).launch(emptyCoroutineExceptionHandler) {
-                            spaceEngineersRemoteClient.session.sendMessage(text)
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    override fun onStart() {
-        super.onStart()
-        heartbeatJob = CoroutineScope(IO).launch {
-            try {
-                while (true) {
-                    spaceEngineersRemoteClient.server.serverStatus().data.run {
-                        runOnUiThread {
-                            toolbar.subtitle =
-                                "Sim: $simSpeed, load: ${simulationCpuLoad.toInt()}%, Players: $players"
-                        }
-                    }
-                    delay(heartbeatInterval)
-                }
-            } catch (clientRequestException: ClientRequestException) {
-                runOnUiThread {
-                    alert("Please check securityKey") {
-                        title = "Forbidden"
-                        yesButton { finish() }
-                        onCancelled { finish() }
-                    }.show()
-                }
-            } catch (e: Exception) {
-                runOnUiThread {
-                    alert(e.message ?: e.toString()) {
-                        title = "Error"
-                        yesButton { finish() }
-                        onCancelled { finish() }
-                    }.show()
-                }
-            }
         }
 
-        messageJob = CoroutineScope(IO).launch {
-            var lastTimestamp: Long? = null
-            while (true) {
-                try {
-                    spaceEngineersRemoteClient.session.messages(lastTimestamp).data.run {
-                        runOnUiThread {
-                            chatTextView.append(joinToString(separator = "\n") { "${it.displayName}: ${it.content}" })
-                        }
-                        lastTimestamp = last().timestamp
-                    }
-                    delay(chatInterval)
-                } catch (e: CancellationException) {
-                    break
-                } catch (e: Exception) {
-
-                }
-            }
+        model.error.observe(this) {
+            alert(it.message ?: it.toString()) {
+                title = "Error"
+                yesButton { finish() }
+                onCancelled { finish() }
+            }.show()
         }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        heartbeatJob?.cancel()
-        messageJob?.cancel()
+        model.serverStatus.observe(this) {
+            toolbar.subtitle =
+                "Sim: ${it.simSpeed}, load: ${it.simulationCpuLoad.toInt()}%, Players: ${it.players}"
+        }
+        model.startFetchServerStatus()
     }
 
     companion object {
-        private const val heartbeatInterval = 61_000L
-        private const val chatInterval = 2_000L
         const val inputValue = "profile"
+    }
+}
+
+class VRageViewModel : ViewModel() {
+    private lateinit var spaceEngineersRemoteClient: SpaceEngineersRemoteClient
+    val error = MutableLiveData<Throwable>()
+    val serverStatus = MutableLiveData<Status>()
+
+    fun init(profile: Profile) {
+        spaceEngineersRemoteClient = SpaceEngineersRemoteClient(profile.url, profile.securityKey)
+    }
+
+    fun startFetchServerStatus(interval: Long = 5_000) {
+        viewModelScope.launch(IO + CoroutineExceptionHandler { _, throwable ->
+            logger.error(throwable)
+            error.postValue(throwable)
+        }) {
+            while (true) {
+                serverStatus.postValue(spaceEngineersRemoteClient.server.serverStatus().data)
+                delay(interval)
+            }
+        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        spaceEngineersRemoteClient.close()
     }
 }

@@ -6,6 +6,7 @@ import org.jetbrains.anko.db.ManagedSQLiteOpenHelper
 class App : Application() {
     override fun onCreate() {
         super.onCreate()
+        //init
         instance = this
         database = DatabaseHelper(this)
     }
