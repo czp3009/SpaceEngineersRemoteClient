@@ -12,7 +12,7 @@ import androidx.lifecycle.observe
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.hiczp.spaceengineers.remoteclient.android.*
 import com.hiczp.spaceengineers.remoteclient.android.adapter.ProfileListAdapter
-import com.hiczp.spaceengineers.remoteclient.android.layout.defaultToolBar
+import com.hiczp.spaceengineers.remoteclient.android.layout.defaultStyle
 import org.jetbrains.anko.*
 import org.jetbrains.anko.design.appBarLayout
 import org.jetbrains.anko.recyclerview.v7.recyclerView
@@ -28,7 +28,8 @@ class MainActivity : AppCompatActivity() {
         lateinit var profileListAdapter: ProfileListAdapter
         verticalLayout {
             appBarLayout {
-                defaultToolBar().apply {
+                toolbar {
+                    defaultStyle()
                     imageButton(R.drawable.ic_add_white_24dp) {
                         backgroundColor = Color.TRANSPARENT
                     }.onClick {
