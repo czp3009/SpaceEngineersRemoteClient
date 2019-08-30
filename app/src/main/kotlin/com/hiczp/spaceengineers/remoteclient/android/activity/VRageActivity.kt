@@ -1,4 +1,4 @@
-package com.hiczp.spaceengineersremoteclient.activity
+package com.hiczp.spaceengineers.remoteclient.android.activity
 
 import android.graphics.Color
 import android.os.Bundle
@@ -7,8 +7,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.*
 import com.hiczp.spaceengineers.remoteapi.SpaceEngineersRemoteClient
 import com.hiczp.spaceengineers.remoteapi.service.server.Status
-import com.hiczp.spaceengineersremoteclient.Profile
-import com.hiczp.spaceengineersremoteclient.extension.error
+import com.hiczp.spaceengineers.remoteclient.android.Profile
+import com.hiczp.spaceengineers.remoteclient.android.extension.error
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.delay

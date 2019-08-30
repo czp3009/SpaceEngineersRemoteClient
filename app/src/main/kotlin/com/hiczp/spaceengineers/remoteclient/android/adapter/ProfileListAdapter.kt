@@ -1,12 +1,12 @@
-package com.hiczp.spaceengineersremoteclient.adapter
+package com.hiczp.spaceengineers.remoteclient.android.adapter
 
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.hiczp.spaceengineersremoteclient.Profile
-import com.hiczp.spaceengineersremoteclient.component.ProfileUI
+import com.hiczp.spaceengineers.remoteclient.android.Profile
+import com.hiczp.spaceengineers.remoteclient.android.component.ProfileUI
 import kotlinx.coroutines.CoroutineScope
 import org.jetbrains.anko.AnkoContext
 import org.jetbrains.anko.sdk27.coroutines.onClick

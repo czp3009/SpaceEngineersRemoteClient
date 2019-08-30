@@ -1,4 +1,4 @@
-package com.hiczp.spaceengineersremoteclient.extension
+package com.hiczp.spaceengineers.remoteclient.android.extension
 
 import android.widget.EditText
 

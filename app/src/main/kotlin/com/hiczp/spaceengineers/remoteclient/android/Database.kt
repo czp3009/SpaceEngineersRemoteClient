@@ -1,4 +1,4 @@
-package com.hiczp.spaceengineersremoteclient
+package com.hiczp.spaceengineers.remoteclient.android
 
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase

@@ -1,6 +1,6 @@
-package com.hiczp.spaceengineersremoteclient.extension
+package com.hiczp.spaceengineers.remoteclient.android.extension
 
-import com.hiczp.spaceengineersremoteclient.BuildConfig
+import com.hiczp.spaceengineers.remoteclient.android.BuildConfig
 import kotlinx.coroutines.CoroutineExceptionHandler
 
 val emptyCoroutineExceptionHandler = CoroutineExceptionHandler { _, throwable ->

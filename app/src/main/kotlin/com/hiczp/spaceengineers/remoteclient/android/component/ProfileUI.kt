@@ -1,4 +1,4 @@
-package com.hiczp.spaceengineersremoteclient.component
+package com.hiczp.spaceengineers.remoteclient.android.component
 
 import android.graphics.Color
 import android.view.ViewGroup

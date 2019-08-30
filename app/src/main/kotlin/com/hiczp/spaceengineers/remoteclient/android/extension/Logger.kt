@@ -1,4 +1,4 @@
-package com.hiczp.spaceengineersremoteclient.extension
+package com.hiczp.spaceengineers.remoteclient.android.extension
 
 import org.jetbrains.anko.AnkoLogger
 import org.jetbrains.anko.error

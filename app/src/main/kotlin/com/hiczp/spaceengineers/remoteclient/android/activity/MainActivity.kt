@@ -1,4 +1,4 @@
-package com.hiczp.spaceengineersremoteclient.activity
+package com.hiczp.spaceengineers.remoteclient.android.activity
 
 import android.app.Activity
 import android.content.Intent
@@ -10,9 +10,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.observe
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.hiczp.spaceengineersremoteclient.*
-import com.hiczp.spaceengineersremoteclient.adapter.ProfileListAdapter
-import com.hiczp.spaceengineersremoteclient.layout.defaultToolBar
+import com.hiczp.spaceengineers.remoteclient.android.*
+import com.hiczp.spaceengineers.remoteclient.android.adapter.ProfileListAdapter
+import com.hiczp.spaceengineers.remoteclient.android.layout.defaultToolBar
 import org.jetbrains.anko.*
 import org.jetbrains.anko.design.appBarLayout
 import org.jetbrains.anko.recyclerview.v7.recyclerView

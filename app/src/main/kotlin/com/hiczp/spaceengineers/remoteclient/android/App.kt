@@ -1,4 +1,4 @@
-package com.hiczp.spaceengineersremoteclient
+package com.hiczp.spaceengineers.remoteclient.android
 
 import android.app.Application
 import org.jetbrains.anko.db.ManagedSQLiteOpenHelper

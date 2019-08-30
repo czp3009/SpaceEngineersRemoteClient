@@ -1,4 +1,4 @@
-package com.hiczp.spaceengineersremoteclient.activity
+package com.hiczp.spaceengineers.remoteclient.android.activity
 
 import android.app.Activity
 import android.graphics.Color
@@ -7,11 +7,11 @@ import android.text.InputFilter
 import android.text.InputType
 import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
-import com.hiczp.spaceengineersremoteclient.Profile
-import com.hiczp.spaceengineersremoteclient.database
-import com.hiczp.spaceengineersremoteclient.extension.value
-import com.hiczp.spaceengineersremoteclient.layout.defaultAppBar
-import com.hiczp.spaceengineersremoteclient.save
+import com.hiczp.spaceengineers.remoteclient.android.Profile
+import com.hiczp.spaceengineers.remoteclient.android.database
+import com.hiczp.spaceengineers.remoteclient.android.extension.value
+import com.hiczp.spaceengineers.remoteclient.android.layout.defaultAppBar
+import com.hiczp.spaceengineers.remoteclient.android.save
 import io.ktor.http.Url
 import org.jetbrains.anko.*
 import org.jetbrains.anko.sdk27.coroutines.onClick
