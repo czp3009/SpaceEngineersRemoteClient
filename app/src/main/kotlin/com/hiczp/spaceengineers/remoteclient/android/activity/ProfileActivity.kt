@@ -5,11 +5,13 @@ import android.graphics.Color
 import android.os.Bundle
 import android.text.InputFilter
 import android.text.InputType
-import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 import com.hiczp.spaceengineers.remoteclient.android.Profile
+import com.hiczp.spaceengineers.remoteclient.android.binding.FormViewModel
+import com.hiczp.spaceengineers.remoteclient.android.binding.bind
+import com.hiczp.spaceengineers.remoteclient.android.binding.notEmptyValidator
 import com.hiczp.spaceengineers.remoteclient.android.database
-import com.hiczp.spaceengineers.remoteclient.android.extension.value
 import com.hiczp.spaceengineers.remoteclient.android.layout.defaultAppBar
 import com.hiczp.spaceengineers.remoteclient.android.save
 import io.ktor.http.Url
@@ -19,21 +21,19 @@ import java.util.*
 import javax.crypto.spec.SecretKeySpec
 
 class ProfileActivity : AppCompatActivity() {
+    private lateinit var model: ProfileViewModel
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val savedProfile = intent.extras?.get(inputValue) as? Profile
-        val (savedHost, savedPort) = if (savedProfile != null) {
-            Url(savedProfile.url).run {
-                host to port
-            }
-        } else {
-            null to null
-        }
+        model = ViewModelProvider(this)[ProfileViewModel::class.java]
 
-        lateinit var name: EditText
-        lateinit var domain: EditText
-        lateinit var port: EditText
-        lateinit var securityKey: EditText
+        val savedProfile = intent.extras?.get(inputValue) as? Profile
+        val savedName = savedProfile?.name ?: ""
+        val (savedHost, savedPort) = savedProfile?.let { Url(savedProfile.url) }?.run {
+            host to port
+        } ?: "" to 8080
+        val savedSecurityKey = savedProfile?.securityKey ?: ""
+
         verticalLayout {
             defaultAppBar()
 
@@ -41,74 +41,73 @@ class ProfileActivity : AppCompatActivity() {
                 padding = dip(16)
 
                 textView("Name:")
-                name = editText {
+                editText {
                     singleLine = true
-                    setText(savedProfile?.name)
-                }
+                }.bind(model, "name", savedName, notEmptyValidator)
 
                 textView("Remote URL:")
                 linearLayout {
                     textView("http://") {
                         textColor = Color.BLACK
                     }
-                    domain = editText {
+                    editText {
                         singleLine = true
-                        setText(savedHost)
-                    }.lparams(matchParent)
+                    }.lparams(matchParent).bind(model, "host", savedHost) {
+                        if (it.isEmpty()) {
+                            "Must not be empty"
+                        } else if (it.contains("//") || it.contains(":")) {
+                            "Invalid host"
+                        } else {
+                            null
+                        }
+                    }
                 }
 
                 textView("Port:")
-                port = editText {
+                editText {
                     inputType = InputType.TYPE_CLASS_NUMBER
                     singleLine = true
                     filters += InputFilter.LengthFilter(5)
-                    setText(savedPort?.toString() ?: "8080")
+                }.bind(model, "port", savedPort.toString()) {
+                    val range = 1..65535
+                    if (it.isEmpty() || it.toInt() !in range) {
+                        "Port must in range $range"
+                    } else {
+                        null
+                    }
                 }
 
                 textView("Security Key:")
-                securityKey = editText {
+                editText {
                     singleLine = true
-                    setText(savedProfile?.securityKey)
+                }.bind(model, "securityKey", savedSecurityKey, null, false) {
+                    runCatching {
+                        SecretKeySpec(Base64.getDecoder().decode(it), "HmacSHA1")
+                    }.let {
+                        if (it.isFailure) {
+                            "Invalid SecurityKey"
+                        } else {
+                            null
+                        }
+                    }
                 }
 
                 button("Save").onClick {
-                    fun EditText.checkEmpty() {
-                        if (text.isEmpty()) throw ValidationException(this, "Must be not empty")
-                    }
-                    try {
-                        name.checkEmpty()
-                        domain.checkEmpty()
-                        with(port) {
-                            checkEmpty()
-                            val range = 1..65535
-                            if (value.toInt() !in range) throw ValidationException(
-                                this,
-                                "Port must in range $range"
-                            )
-                        }
-                        with(securityKey) {
-                            checkEmpty()
-                            try {
-                                SecretKeySpec(Base64.getDecoder().decode(value), "HmacSHA1")
-                            } catch (e: Exception) {
-                                throw ValidationException(this, "Invalid SHA1 secretKey")
-                            }
-                        }
-                    } catch (validationException: ValidationException) {
-                        val (editText, errorMessage) = validationException
-                        editText.run {
-                            error = errorMessage
-                            requestFocus()
-                        }
+                    model.validate().firstOrNull()?.let { (_, textView, _) ->
+                        textView.requestFocus()
                         return@onClick
                     }
+                    val name by model
+                    val host by model
+                    val port by model
+                    val securityKey by model
                     val newProfile = database.use {
                         save(
                             Profile(
-                                id = savedProfile?.id,
-                                name = name.value,
-                                url = "http://${domain.value}:${port.value}",
-                                securityKey = securityKey.value
+                                savedProfile?.id,
+                                name,
+                                "http://$host:$port",
+                                securityKey
                             )
                         )
                     }
@@ -128,10 +127,4 @@ class ProfileActivity : AppCompatActivity() {
     }
 }
 
-private class ValidationException(
-    private val editText: EditText,
-    private val errorMessage: String
-) : IllegalStateException() {
-    operator fun component1() = editText
-    operator fun component2() = errorMessage
-}
+class ProfileViewModel : FormViewModel()
