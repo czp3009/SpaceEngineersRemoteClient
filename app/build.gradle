@@ -29,6 +29,10 @@ android {
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_1_8
     }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 }
 
 //kotlin
@@ -78,7 +82,13 @@ dependencies {
 //space-engineers
 dependencies {
     // https://mvnrepository.com/artifact/com.hiczp/space-engineers-remote-api
-    implementation group: 'com.hiczp', name: 'space-engineers-remote-api', version: '0.1.1'
+    implementation group: 'com.hiczp', name: 'space-engineers-remote-api', version: '0.1.2'
+}
+
+//ktor engine
+dependencies {
+    // https://mvnrepository.com/artifact/io.ktor/ktor-client-okhttp
+    implementation group: 'io.ktor', name: 'ktor-client-okhttp', version: ktor_version
 }
 
 //log

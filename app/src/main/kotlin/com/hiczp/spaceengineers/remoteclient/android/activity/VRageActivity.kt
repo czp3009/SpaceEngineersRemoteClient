@@ -9,6 +9,7 @@ import com.hiczp.spaceengineers.remoteapi.SpaceEngineersRemoteClient
 import com.hiczp.spaceengineers.remoteapi.service.server.Status
 import com.hiczp.spaceengineers.remoteclient.android.Profile
 import com.hiczp.spaceengineers.remoteclient.android.extension.error
+import io.ktor.client.engine.okhttp.OkHttp
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.delay
@@ -66,10 +67,14 @@ class VRageViewModel : ViewModel() {
     val serverStatus = MutableLiveData<Status>()
 
     fun init(profile: Profile) {
-        spaceEngineersRemoteClient = SpaceEngineersRemoteClient(profile.url, profile.securityKey)
+        spaceEngineersRemoteClient = SpaceEngineersRemoteClient(
+            profile.url,
+            profile.securityKey,
+            OkHttp
+        )
     }
 
-    fun startFetchServerStatus(interval: Long = 5_000) {
+    fun startFetchServerStatus(interval: Long = 10_000) {
         viewModelScope.launch(IO + CoroutineExceptionHandler { _, throwable ->
             logger.error(throwable)
             error.postValue(throwable)
