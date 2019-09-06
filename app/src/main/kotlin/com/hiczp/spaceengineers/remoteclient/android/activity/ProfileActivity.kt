@@ -28,6 +28,7 @@ class ProfileActivity : AppCompatActivity() {
         model = ViewModelProvider(this)[ProfileViewModel::class.java]
 
         val savedProfile = intent.extras?.get(inputValue) as? Profile
+        val savedId = savedInstanceState?.getLong("id") ?: savedProfile?.id
         val savedName = savedProfile?.name ?: ""
         val (savedHost, savedPort) = savedProfile?.let { Url(savedProfile.url) }?.run {
             host to port
@@ -104,7 +105,7 @@ class ProfileActivity : AppCompatActivity() {
                     val newProfile = database.use {
                         save(
                             Profile(
-                                savedProfile?.id,
+                                savedId,
                                 name,
                                 "http://$host:$port",
                                 securityKey
@@ -118,6 +119,14 @@ class ProfileActivity : AppCompatActivity() {
                     finish()
                 }
             }
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        val profile = intent.extras?.get(inputValue) as? Profile
+        if (profile != null) {
+            outState.putLong("id", profile.id!!)
         }
     }
 

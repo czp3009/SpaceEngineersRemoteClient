@@ -25,6 +25,8 @@ open class FormViewModel : ViewModel() {
     }.onEach { (_, textView, error) ->
         textView.error = error
     }.toList()
+
+    fun clear() = form.clear()
 }
 
 fun <T : TextView> T.bind(
@@ -35,14 +37,17 @@ fun <T : TextView> T.bind(
     realtimeValidation: Boolean = false,
     validator: Validator = { null }
 ) = apply {
-    val (_, liveData, _) = model.form.getOrPut(fieldName) {
-        Triple(
-            this,
-            MutableLiveData(initialValue),
-            validator
-        )
+    val savedRecord = model.form[fieldName]
+    val liveData = if (savedRecord == null) {
+        MutableLiveData(initialValue)
+    } else {
+        MutableLiveData(savedRecord.second.value)
     }
-
+    model.form[fieldName] = Triple(
+        this,
+        liveData,
+        validator
+    )
     var shouldDo = false
     (lifecycleOwner ?: parentLifecycleOwner)?.let { actualLifecycleOwner ->
         liveData.observe(actualLifecycleOwner) {
