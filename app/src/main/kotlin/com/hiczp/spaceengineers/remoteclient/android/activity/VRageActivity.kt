@@ -4,10 +4,13 @@ import android.graphics.Color
 import android.os.Bundle
 import android.widget.Toolbar
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.commit
 import androidx.lifecycle.*
+import androidx.navigation.fragment.NavHostFragment
 import com.hiczp.spaceengineers.remoteapi.SpaceEngineersRemoteClient
 import com.hiczp.spaceengineers.remoteapi.service.server.Status
 import com.hiczp.spaceengineers.remoteclient.android.Profile
+import com.hiczp.spaceengineers.remoteclient.android.R
 import com.hiczp.spaceengineers.remoteclient.android.extension.error
 import io.ktor.client.engine.okhttp.OkHttp
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -25,9 +28,7 @@ class VRageActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val profile = intent.extras!![inputValue] as Profile
-        model = ViewModelProvider(this)[VRageViewModel::class.java].apply {
-            init(profile)
-        }
+        model = ViewModelProvider(this)[VRageViewModel::class.java]
 
         lateinit var toolbar: Toolbar
         verticalLayout {
@@ -39,6 +40,10 @@ class VRageActivity : AppCompatActivity() {
                     title = profile.name
                     subtitle = "Connecting..."
                 }
+            }
+            verticalLayout {
+                horizontalPadding = dip(5)
+                id = fragmentContainerId
             }
         }
 
@@ -53,41 +58,58 @@ class VRageActivity : AppCompatActivity() {
             toolbar.subtitle =
                 "Sim: ${it.simSpeed}, load: ${it.simulationCpuLoad.toInt()}%, Players: ${it.players}"
         }
-        model.startFetchServerStatus()
+        model.init(profile)
+
+        supportFragmentManager.commit {
+            replace(
+                fragmentContainerId,
+                supportFragmentManager.findFragmentByTag(fragmentTag)
+                    ?: NavHostFragment.create(R.navigation.server_indicator_navigation).apply {
+                        retainInstance = true
+                    },
+                fragmentTag
+            )
+        }
     }
 
     companion object {
         const val inputValue = "profile"
+        const val fragmentContainerId = 1
+        const val fragmentTag = "nav_host"
     }
 }
 
 class VRageViewModel : ViewModel() {
-    private lateinit var spaceEngineersRemoteClient: SpaceEngineersRemoteClient
+    val spaceEngineersRemoteClient = MutableLiveData<SpaceEngineersRemoteClient>()
     val error = MutableLiveData<Throwable>()
     val serverStatus = MutableLiveData<Status>()
 
-    fun init(profile: Profile) {
-        spaceEngineersRemoteClient = SpaceEngineersRemoteClient(
-            profile.url,
-            profile.securityKey,
-            OkHttp
-        )
+    init {
+        spaceEngineersRemoteClient.observeForever {
+            viewModelScope.launch(IO + CoroutineExceptionHandler { _, throwable ->
+                logger.error(throwable)
+                error.postValue(throwable)
+            }) {
+                while (true) {
+                    it.server.serverStatus().data.run(serverStatus::postValue)
+                    delay(10_000)
+                }
+            }
+        }
     }
 
-    fun startFetchServerStatus(interval: Long = 10_000) {
-        viewModelScope.launch(IO + CoroutineExceptionHandler { _, throwable ->
-            logger.error(throwable)
-            error.postValue(throwable)
-        }) {
-            while (true) {
-                serverStatus.postValue(spaceEngineersRemoteClient.server.serverStatus().data)
-                delay(interval)
-            }
+    fun init(profile: Profile) {
+        if (spaceEngineersRemoteClient.value == null) {
+            spaceEngineersRemoteClient.value = SpaceEngineersRemoteClient(
+                profile.url,
+                profile.securityKey,
+                OkHttp
+            )
         }
     }
 
     override fun onCleared() {
         super.onCleared()
-        spaceEngineersRemoteClient.close()
+        spaceEngineersRemoteClient.value?.close()
     }
 }
