@@ -2,7 +2,6 @@ package com.hiczp.spaceengineers.remoteclient.android.activity
 
 import android.graphics.Color
 import android.os.Bundle
-import android.view.View
 import android.widget.Toolbar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.*
@@ -13,6 +12,7 @@ import com.hiczp.spaceengineers.remoteapi.service.server.Status
 import com.hiczp.spaceengineers.remoteapi.service.session.Message
 import com.hiczp.spaceengineers.remoteclient.android.Profile
 import com.hiczp.spaceengineers.remoteclient.android.adapter.VRageFragmentPagerAdapter
+import com.hiczp.spaceengineers.remoteclient.android.extension.Ticks
 import com.hiczp.spaceengineers.remoteclient.android.extension.error
 import io.ktor.client.engine.okhttp.OkHttp
 import kotlinx.coroutines.CancellationException
@@ -51,7 +51,7 @@ class VRageActivity : AppCompatActivity() {
                 tabLayout = tabLayout()
             }
             viewPager = viewPager {
-                id = View.generateViewId()
+                id = pagerViewId
                 adapter = VRageFragmentPagerAdapter(supportFragmentManager)
             }
         }
@@ -72,6 +72,7 @@ class VRageActivity : AppCompatActivity() {
     }
 
     companion object {
+        private const val pagerViewId = 1
         const val inputValue = "profile"
     }
 }
@@ -98,7 +99,7 @@ class VRageViewModel : ViewModel() {
         //chat
         spaceEngineersRemoteClient.observeForever { client ->
             viewModelScope.launch(IO) {
-                var lastTimestamp: Long? = null
+                var lastTimestamp: Ticks? = null
                 while (true) {
                     try {
                         val newMessages = client.session.messages(lastTimestamp).data
@@ -126,6 +127,8 @@ class VRageViewModel : ViewModel() {
             )
         }
     }
+
+    val client get() = spaceEngineersRemoteClient.value!!
 
     override fun onCleared() {
         super.onCleared()

@@ -6,4 +6,4 @@ import com.hiczp.spaceengineers.remoteclient.android.activity.VRageViewModel
 
 fun Fragment.vRageViewModel() = ViewModelProvider(activity!!)[VRageViewModel::class.java]
 
-fun Fragment.client() = vRageViewModel().spaceEngineersRemoteClient.value!!
+fun Fragment.client() = vRageViewModel().client

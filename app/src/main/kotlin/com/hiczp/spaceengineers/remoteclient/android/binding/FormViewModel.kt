@@ -17,6 +17,10 @@ open class FormViewModel : ViewModel() {
 
     operator fun getValue(thisRef: Any?, property: KProperty<*>) = get(property.name)!!
 
+    operator fun set(fieldName: String, value: String) {
+        form[fieldName]?.second?.value = value
+    }
+
     fun validate() = form.asSequence().map { (fieldName, triple) ->
         val (textView, liveData, validator) = triple
         Triple(fieldName, textView, validator(liveData.value ?: ""))
@@ -48,20 +52,34 @@ fun <T : TextView> T.bind(
         liveData,
         validator
     )
-    var shouldDo = false
+
+    var initDo = true
+    var observeDo = false
+    var listenerDo = false
     (lifecycleOwner ?: parentLifecycleOwner)?.let { actualLifecycleOwner ->
         liveData.observe(actualLifecycleOwner) {
-            shouldDo = false
-            setTextKeepState(it)
+            if (initDo) {
+                setTextKeepState(it)
+                initDo = false
+                return@observe
+            }
+            if (!listenerDo) {
+                observeDo = true
+                setTextKeepState(it)
+            } else {
+                listenerDo = false
+            }
         }
     }
     doAfterTextChanged {
-        if (shouldDo) {
+        if (initDo) return@doAfterTextChanged
+        if (!observeDo) {
+            listenerDo = true
             val value = it.toString()
             if (realtimeValidation) error = validator(value)
             liveData.value = value
         } else {
-            shouldDo = true
+            observeDo = false
         }
     }
 }
