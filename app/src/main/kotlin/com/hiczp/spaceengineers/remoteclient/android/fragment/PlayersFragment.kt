@@ -7,13 +7,11 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.observe
 import com.hiczp.spaceengineers.remoteapi.service.session.Player
 import com.hiczp.spaceengineers.remoteclient.android.extension.client
 import com.hiczp.spaceengineers.remoteclient.android.viewmodel.ClientViewModel
-import com.hiczp.spaceengineers.remoteclient.android.viewmodel.bindToToast
 import org.jetbrains.anko.*
 import org.jetbrains.anko.sdk27.coroutines.onClick
 import org.jetbrains.anko.support.v4.UI
@@ -25,7 +23,7 @@ class PlayersFragment : Fragment() {
         super.onCreate(savedInstanceState)
         retainInstance = true
         model = ViewModelProvider(this)[PlayersViewModel::class.java].apply {
-            init(client())
+            init(client()) { session.players().data }
         }
     }
 
@@ -39,6 +37,7 @@ class PlayersFragment : Fragment() {
         lateinit var kickButton: Button
         lateinit var promoteButton: Button
         lateinit var demoteButton: Button
+        lateinit var refreshButton: Button
         val view = UI {
             verticalLayout {
                 scrollView {
@@ -54,19 +53,24 @@ class PlayersFragment : Fragment() {
                         promoteButton = button("Promote").lparams(weight = 1f)
                         demoteButton = button("Demote").lparams(weight = 1f)
                     }
-                    button("Refresh").onClick {
-                        model.refresh()
-                    }
+                    refreshButton = button("Refresh")
                 }
             }
         }.view
 
-        model.error.bindToToast(this)
+        model.bindErrorAndRefreshing(
+            this,
+            banButton, kickButton, promoteButton, demoteButton, refreshButton
+        )
 
-        model.players.observe(this) { players ->
+        model.data.observe(this) { players ->
             players.joinToString(separator = "\n", postfix = "\n") {
                 "${if (it.factionName.isNotEmpty()) "[${it.factionName}]" else ""} ${it.displayName} ping: ${it.ping}"
             }.run(content::setText)
+        }
+
+        refreshButton.onClick {
+            model.refresh()
         }
 
         return view
@@ -74,18 +78,8 @@ class PlayersFragment : Fragment() {
 
     override fun onStart() {
         super.onStart()
-        if (model.players.value == null) {
-            model.refresh()
-        }
+        model.tryFirstRefresh()
     }
 }
 
-class PlayersViewModel : ClientViewModel() {
-    val players = MutableLiveData<List<Player>>()
-
-    fun refresh() {
-        launch {
-            client.session.players().data.run(players::postValue)
-        }
-    }
-}
+class PlayersViewModel : ClientViewModel<List<Player>>()

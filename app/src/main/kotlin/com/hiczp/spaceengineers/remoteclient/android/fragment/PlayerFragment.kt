@@ -31,10 +31,7 @@ class PlayerFragment : Fragment() {
                 tabLayout = tabLayout()
                 viewPager = viewPager {
                     id = pagerViewId
-                    adapter = TabFragmentPagerAdapter(requireFragmentManager(), arrayOf(
-                        { PlayersFragment() } to "Players",
-                        { CharactersFragment() } to "Characters"
-                    ))
+                    adapter = TabFragmentPagerAdapter(childFragmentManager, fragmentAndTags)
                 }
             }
         }.view
@@ -45,5 +42,9 @@ class PlayerFragment : Fragment() {
 
     companion object {
         private val pagerViewId = View.generateViewId()
+        private val fragmentAndTags = arrayOf(
+            { PlayersFragment() } to "Players",
+            { CharactersFragment() } to "Characters"
+        )
     }
 }

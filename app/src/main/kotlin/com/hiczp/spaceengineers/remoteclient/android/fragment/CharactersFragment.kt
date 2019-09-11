@@ -7,12 +7,11 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.observe
 import com.hiczp.spaceengineers.remoteapi.service.session.Character
 import com.hiczp.spaceengineers.remoteclient.android.extension.client
 import com.hiczp.spaceengineers.remoteclient.android.viewmodel.ClientViewModel
-import com.hiczp.spaceengineers.remoteclient.android.viewmodel.bindToToast
 import org.jetbrains.anko.button
 import org.jetbrains.anko.scrollView
 import org.jetbrains.anko.sdk27.coroutines.onClick
@@ -27,7 +26,7 @@ class CharactersFragment : Fragment() {
         super.onCreate(savedInstanceState)
         retainInstance = true
         model = ViewModelProvider(this)[CharactersViewModel::class.java].apply {
-            init(client())
+            init(client()) { session.characters().data }
         }
     }
 
@@ -37,6 +36,7 @@ class CharactersFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         lateinit var content: TextView
+        lateinit var stopButton: Button
         lateinit var refreshButton: Button
         val view = UI {
             verticalLayout {
@@ -44,31 +44,36 @@ class CharactersFragment : Fragment() {
                     content = textView()
                 }.lparams(weight = 1f)
 
-                button("Refresh").onClick {
-                    model.refresh()
-                }
+                stopButton = button("Stop")
+                refreshButton = button("Refresh")
             }
         }.view
 
-        model.error.bindToToast(this)
+        model.bindErrorAndRefreshing(
+            this,
+            stopButton, refreshButton
+        )
+
+        model.data.observe(this) { characters ->
+            characters.joinToString(separator = "\n", postfix = "\n") {
+                "${it.displayName} ${it.linearSpeed}m/s ${it.mass}KG"
+            }.run(content::setText)
+        }
+
+        stopButton.onClick {
+
+        }
+        refreshButton.onClick {
+            model.refresh()
+        }
 
         return view
     }
 
     override fun onStart() {
         super.onStart()
-        if (model.characters.value == null) {
-            model.refresh()
-        }
+        model.tryFirstRefresh()
     }
 }
 
-class CharactersViewModel : ClientViewModel() {
-    val characters = MutableLiveData<List<Character>>()
-
-    fun refresh() {
-        launch {
-            client.session.characters().data.run(characters::postValue)
-        }
-    }
-}
+class CharactersViewModel : ClientViewModel<List<Character>>()

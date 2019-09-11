@@ -56,13 +56,7 @@ class VRageActivity : AppCompatActivity() {
             }
             viewPager = viewPager {
                 id = pagerViewId
-                adapter = TabFragmentPagerAdapter(supportFragmentManager, arrayOf(
-                    { ChatFragment() } to "Chat",
-                    { PlayerFragment() } to "Player",
-                    { GridsFragment() } to "Grids",
-                    { VoxelFragment() } to "Voxel",
-                    { ExtraFragment() } to "Extra"
-                ))
+                adapter = TabFragmentPagerAdapter(supportFragmentManager, fragmentAndTags)
             }
         }
         tabLayout.setupWithViewPager(viewPager)
@@ -75,14 +69,24 @@ class VRageActivity : AppCompatActivity() {
             }.show()
         }
         model.serverStatus.observe(this) {
-            toolbar.subtitle =
-                "Sim: ${it.simSpeed}, load: ${it.simulationCpuLoad.toInt()}%, Players: ${it.players}"
+            if (it.isReady) {
+                "Sim: ${it.simSpeed}, Load: ${it.simulationCpuLoad.toInt()}%, Players: ${it.players}"
+            } else {
+                "Not Ready"
+            }.run(toolbar::setSubtitle)
         }
         model.init(profile)
     }
 
     companion object {
         private val pagerViewId = View.generateViewId()
+        private val fragmentAndTags = arrayOf(
+            { ChatFragment() } to "Chat",
+            { PlayerFragment() } to "Player",
+            { GridsFragment() } to "Grids",
+            { VoxelFragment() } to "Voxel",
+            { ExtraFragment() } to "Extra"
+        )
         const val inputValue = "profile"
     }
 }

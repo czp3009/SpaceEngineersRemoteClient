@@ -54,7 +54,10 @@ class ChatFragment : Fragment() {
                     content = textView {
                         hint = "Loading..."
                     }
-                }.lparams(weight = 1f)
+                }.lparams {
+                    width = matchParent
+                    weight = 1f
+                }
 
                 linearLayout {
                     editText {
@@ -70,7 +73,6 @@ class ChatFragment : Fragment() {
 
         var previousLine = 0
         vRageViewModel.chatMessages.observe(this@ChatFragment) { messages ->
-            println(scrollView.scrollY)
             if (content.hint.isNotEmpty()) content.hint = ""
             if (messages.size > previousLine) {
                 val nowInEnd = content.bottom == scrollView.height + scrollView.scrollY
@@ -91,7 +93,7 @@ class ChatFragment : Fragment() {
             }
         }
 
-        model.sendButtonEnable.observe(this@ChatFragment) {
+        model.sendButtonEnable.observe(this) {
             sendButton.isEnabled = it
         }
         sendButton.onClick {

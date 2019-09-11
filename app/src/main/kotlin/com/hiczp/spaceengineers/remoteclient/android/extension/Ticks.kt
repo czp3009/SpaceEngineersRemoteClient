@@ -6,7 +6,8 @@ import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.util.*
 
-typealias Ticks = Long
+//c# ticks
+internal typealias Ticks = Long
 
 private val offset = Duration.between(
     Instant.parse("0001-01-01T00:00:00.00Z"),
