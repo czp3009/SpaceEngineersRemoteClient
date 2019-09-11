@@ -2,6 +2,7 @@ package com.hiczp.spaceengineers.remoteclient.android.activity
 
 import android.graphics.Color
 import android.os.Bundle
+import android.view.View
 import android.widget.Toolbar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.*
@@ -11,13 +12,16 @@ import com.hiczp.spaceengineers.remoteapi.SpaceEngineersRemoteClient
 import com.hiczp.spaceengineers.remoteapi.service.server.Status
 import com.hiczp.spaceengineers.remoteapi.service.session.Message
 import com.hiczp.spaceengineers.remoteclient.android.Profile
-import com.hiczp.spaceengineers.remoteclient.android.adapter.VRageFragmentPagerAdapter
+import com.hiczp.spaceengineers.remoteclient.android.adapter.TabFragmentPagerAdapter
 import com.hiczp.spaceengineers.remoteclient.android.extension.Ticks
 import com.hiczp.spaceengineers.remoteclient.android.extension.error
+import com.hiczp.spaceengineers.remoteclient.android.fragment.*
 import io.ktor.client.engine.okhttp.OkHttp
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.anko.*
@@ -52,7 +56,13 @@ class VRageActivity : AppCompatActivity() {
             }
             viewPager = viewPager {
                 id = pagerViewId
-                adapter = VRageFragmentPagerAdapter(supportFragmentManager)
+                adapter = TabFragmentPagerAdapter(supportFragmentManager, arrayOf(
+                    { ChatFragment() } to "Chat",
+                    { PlayerFragment() } to "Player",
+                    { GridsFragment() } to "Grids",
+                    { VoxelFragment() } to "Voxel",
+                    { ExtraFragment() } to "Extra"
+                ))
             }
         }
         tabLayout.setupWithViewPager(viewPager)
@@ -72,16 +82,17 @@ class VRageActivity : AppCompatActivity() {
     }
 
     companion object {
-        private const val pagerViewId = 1
+        private val pagerViewId = View.generateViewId()
         const val inputValue = "profile"
     }
 }
 
 class VRageViewModel : ViewModel() {
-    val spaceEngineersRemoteClient = MutableLiveData<SpaceEngineersRemoteClient>()
+    private val spaceEngineersRemoteClient = MutableLiveData<SpaceEngineersRemoteClient>()
     val error = MutableLiveData<Throwable>()
     val serverStatus = MutableLiveData<Status>()
-    val chatMessages = MutableLiveData<MutableList<Message>>(LinkedList())
+    val chatMessages = MutableLiveData<MutableList<Message>>()
+    val chatMessagePulse = Channel<Unit>()
 
     init {
         //server status
@@ -101,17 +112,29 @@ class VRageViewModel : ViewModel() {
             viewModelScope.launch(IO) {
                 var lastTimestamp: Ticks? = null
                 while (true) {
+                    chatMessagePulse.receive()
                     try {
                         val newMessages = client.session.messages(lastTimestamp).data
-                        if (newMessages.isNotEmpty()) {
+                        val isFirstTime = chatMessages.value == null
+                        val value = if (isFirstTime) LinkedList() else chatMessages.value!!
+                        val haveNewMessage = newMessages.isNotEmpty()
+                        if (haveNewMessage) {
                             lastTimestamp = newMessages.last().timestamp + 1
-                            chatMessages.postValue(chatMessages.value!!.apply { addAll(newMessages) })
+                            value.addAll(newMessages)
+                        }
+                        if (haveNewMessage || isFirstTime) {
+                            chatMessages.postValue(value)
                         }
                     } catch (e: CancellationException) {
                         break
                     } catch (e: Exception) {
 
                     }
+                }
+            }
+            viewModelScope.launch(Default) {
+                while (true) {
+                    chatMessagePulse.send(Unit)
                     delay(3_000)
                 }
             }

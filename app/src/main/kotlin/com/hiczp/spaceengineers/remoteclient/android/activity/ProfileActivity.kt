@@ -94,29 +94,13 @@ class ProfileActivity : AppCompatActivity() {
                 }
 
                 button("Save").onClick {
-                    model.validate().firstOrNull()?.let { (_, textView, _) ->
-                        textView.requestFocus()
-                        return@onClick
-                    }
-                    val name by model
-                    val host by model
-                    val port by model
-                    val securityKey by model
-                    val newProfile = database.use {
-                        save(
-                            Profile(
-                                savedId,
-                                name,
-                                "http://$host:$port",
-                                securityKey
-                            )
+                    model.saveProfile(savedId)?.run {
+                        setResult(
+                            Activity.RESULT_OK,
+                            intentFor<MainActivity>(returnValue to this)
                         )
+                        finish()
                     }
-                    setResult(
-                        Activity.RESULT_OK,
-                        intentFor<MainActivity>(returnValue to newProfile)
-                    )
-                    finish()
                 }
             }
         }
@@ -136,4 +120,25 @@ class ProfileActivity : AppCompatActivity() {
     }
 }
 
-class ProfileViewModel : FormViewModel()
+class ProfileViewModel : FormViewModel() {
+    fun saveProfile(savedId: Long?): Profile? {
+        validate().firstOrNull()?.let { (_, textView, _) ->
+            textView.requestFocus()
+            return null
+        }
+        val name by this
+        val host by this
+        val port by this
+        val securityKey by this
+        return database.use {
+            save(
+                Profile(
+                    savedId,
+                    name,
+                    "http://$host:$port",
+                    securityKey
+                )
+            )
+        }
+    }
+}

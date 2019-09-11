@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ScrollView
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
@@ -33,7 +34,7 @@ class ChatFragment : Fragment() {
         retainInstance = true
         vRageViewModel = vRageViewModel()
         model = ViewModelProvider(this)[ChatViewModel::class.java].apply {
-            init(vRageViewModel.client)
+            init(vRageViewModel)
         }
     }
 
@@ -42,12 +43,14 @@ class ChatFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        lateinit var scrollView: ScrollView
         lateinit var content: TextView
         lateinit var sendButton: Button
         val view = UI {
             verticalLayout {
-                scrollView {
+                scrollView = scrollView {
                     horizontalPadding = dip(5)
+
                     content = textView {
                         hint = "Loading..."
                     }
@@ -67,7 +70,10 @@ class ChatFragment : Fragment() {
 
         var previousLine = 0
         vRageViewModel.chatMessages.observe(this@ChatFragment) { messages ->
+            println(scrollView.scrollY)
+            if (content.hint.isNotEmpty()) content.hint = ""
             if (messages.size > previousLine) {
+                val nowInEnd = content.bottom == scrollView.height + scrollView.scrollY
                 val currentLine = messages.size
                 content.append(
                     messages.subList(previousLine, currentLine).joinToString(
@@ -78,6 +84,10 @@ class ChatFragment : Fragment() {
                     }
                 )
                 previousLine = currentLine
+                //auto scroll to end if in end before append
+                if (nowInEnd) scrollView.post {
+                    scrollView.fullScroll(View.FOCUS_DOWN)
+                }
             }
         }
 
@@ -96,16 +106,17 @@ class ChatFragment : Fragment() {
 
 //no multiple inheritance
 class ChatViewModel : FormViewModel() {
+    private lateinit var vRageViewModel: VRageViewModel
     private lateinit var client: SpaceEngineersRemoteClient
     val sendButtonEnable by lazy { form["input"]!!.second.map { it.isNotEmpty() } }
 
-    fun init(client: SpaceEngineersRemoteClient) {
-        this.client = client
+    fun init(vRageViewModel: VRageViewModel) {
+        this.vRageViewModel = vRageViewModel
+        this.client = vRageViewModel.client
     }
 
-    fun sendMessage(message: String) {
-        viewModelScope.launch(IO + emptyCoroutineExceptionHandler) {
-            client.session.sendMessage(message)
-        }
+    fun sendMessage(message: String) = viewModelScope.launch(IO + emptyCoroutineExceptionHandler) {
+        client.session.sendMessage(message)
+        vRageViewModel.chatMessagePulse.send(Unit)
     }
 }
