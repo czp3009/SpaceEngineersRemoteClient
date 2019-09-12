@@ -54,8 +54,8 @@ open class ClientViewModel<T> : ViewModel() {
         refreshing.bindToView(lifecycleOwner, *view)
 
     fun bindErrorAndRefreshing(fragment: Fragment, vararg view: View) {
-        bindError(fragment)
-        bindRefreshing(fragment, *view)
+        error.bindToToast(fragment)
+        refreshing.bindToView(fragment, *view)
     }
 }
 

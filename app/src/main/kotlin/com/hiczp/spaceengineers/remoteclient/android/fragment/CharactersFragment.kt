@@ -11,13 +11,11 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.observe
 import com.hiczp.spaceengineers.remoteapi.service.session.Character
 import com.hiczp.spaceengineers.remoteclient.android.extension.client
+import com.hiczp.spaceengineers.remoteclient.android.extension.portrait
 import com.hiczp.spaceengineers.remoteclient.android.viewmodel.ClientViewModel
-import org.jetbrains.anko.button
-import org.jetbrains.anko.scrollView
+import org.jetbrains.anko.*
 import org.jetbrains.anko.sdk27.coroutines.onClick
 import org.jetbrains.anko.support.v4.UI
-import org.jetbrains.anko.textView
-import org.jetbrains.anko.verticalLayout
 
 class CharactersFragment : Fragment() {
     private lateinit var model: CharactersViewModel
@@ -44,8 +42,15 @@ class CharactersFragment : Fragment() {
                     content = textView()
                 }.lparams(weight = 1f)
 
-                stopButton = button("Stop")
-                refreshButton = button("Refresh")
+                if (portrait) {
+                    stopButton = button("Stop")
+                    refreshButton = button("Refresh")
+                } else {
+                    linearLayout {
+                        stopButton = button("Stop").lparams(weight = 1f)
+                        refreshButton = button("Refresh").lparams(weight = 1f)
+                    }
+                }
             }
         }.view
 

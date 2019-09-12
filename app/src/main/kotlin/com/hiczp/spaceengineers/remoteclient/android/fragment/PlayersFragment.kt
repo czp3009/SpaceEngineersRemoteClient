@@ -11,6 +11,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.observe
 import com.hiczp.spaceengineers.remoteapi.service.session.Player
 import com.hiczp.spaceengineers.remoteclient.android.extension.client
+import com.hiczp.spaceengineers.remoteclient.android.extension.portrait
 import com.hiczp.spaceengineers.remoteclient.android.viewmodel.ClientViewModel
 import org.jetbrains.anko.*
 import org.jetbrains.anko.sdk27.coroutines.onClick
@@ -45,15 +46,25 @@ class PlayersFragment : Fragment() {
                 }.lparams(weight = 1f)
 
                 verticalLayout {
-                    linearLayout {
-                        banButton = button("Ban").lparams(weight = 1f)
-                        kickButton = button("Kick").lparams(weight = 1f)
+                    if (portrait) {
+                        linearLayout {
+                            banButton = button("Ban").lparams(weight = 1f)
+                            kickButton = button("Kick").lparams(weight = 1f)
+                        }
+                        linearLayout {
+                            promoteButton = button("Promote").lparams(weight = 1f)
+                            demoteButton = button("Demote").lparams(weight = 1f)
+                        }
+                        refreshButton = button("Refresh")
+                    } else {
+                        linearLayout {
+                            banButton = button("Ban").lparams(weight = 1f)
+                            kickButton = button("Kick").lparams(weight = 1f)
+                            promoteButton = button("Promote").lparams(weight = 1f)
+                            demoteButton = button("Demote").lparams(weight = 1f)
+                            refreshButton = button("Refresh").lparams(weight = 1f)
+                        }
                     }
-                    linearLayout {
-                        promoteButton = button("Promote").lparams(weight = 1f)
-                        demoteButton = button("Demote").lparams(weight = 1f)
-                    }
-                    refreshButton = button("Refresh")
                 }
             }
         }.view

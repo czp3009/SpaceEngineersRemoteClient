@@ -5,6 +5,7 @@ import android.graphics.Color
 import android.os.Bundle
 import android.text.InputFilter
 import android.text.InputType
+import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.hiczp.spaceengineers.remoteclient.android.Profile
@@ -12,6 +13,7 @@ import com.hiczp.spaceengineers.remoteclient.android.binding.FormViewModel
 import com.hiczp.spaceengineers.remoteclient.android.binding.bind
 import com.hiczp.spaceengineers.remoteclient.android.binding.notEmptyValidator
 import com.hiczp.spaceengineers.remoteclient.android.database
+import com.hiczp.spaceengineers.remoteclient.android.extension.portrait
 import com.hiczp.spaceengineers.remoteclient.android.layout.defaultAppBar
 import com.hiczp.spaceengineers.remoteclient.android.save
 import io.ktor.http.Url
@@ -28,7 +30,7 @@ class ProfileActivity : AppCompatActivity() {
         model = ViewModelProvider(this)[ProfileViewModel::class.java]
 
         val savedProfile = intent.extras?.get(inputValue) as? Profile
-        val savedId = savedInstanceState?.getLong("id") ?: savedProfile?.id
+        val savedId = savedProfile?.id
         val savedName = savedProfile?.name ?: ""
         val (savedHost, savedPort) = savedProfile?.let { Url(savedProfile.url) }?.run {
             host to port
@@ -104,13 +106,11 @@ class ProfileActivity : AppCompatActivity() {
                 }
             }
         }
-    }
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        val profile = intent.extras?.get(inputValue) as? Profile
-        if (profile != null) {
-            outState.putLong("id", profile.id!!)
+        //show input method when newly create
+        if (savedId == null && savedInstanceState == null && portrait) {
+            model.form["name"]!!.first.requestFocus()
+            window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
         }
     }
 

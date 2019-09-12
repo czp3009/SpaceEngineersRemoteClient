@@ -4,6 +4,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
+import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.RecyclerView
 import com.hiczp.spaceengineers.remoteclient.android.Profile
 import com.hiczp.spaceengineers.remoteclient.android.component.ProfileUI
@@ -13,9 +14,10 @@ import org.jetbrains.anko.sdk27.coroutines.onClick
 import org.jetbrains.anko.sdk27.coroutines.onLongClick
 
 class ProfileListAdapter(
-    val onDelete: suspend CoroutineScope.(profile: Profile) -> Unit,
-    val onOpen: suspend CoroutineScope.(profile: Profile) -> Unit,
-    val onModify: suspend CoroutineScope.(profile: Profile) -> Unit
+    private val opening: MutableLiveData<Boolean>,
+    private val onDelete: suspend CoroutineScope.(profile: Profile) -> Unit,
+    private val onOpen: suspend CoroutineScope.(profile: Profile) -> Unit,
+    private val onModify: suspend CoroutineScope.(profile: Profile) -> Unit
 ) : RecyclerView.Adapter<ProfileListAdapter.ProfileViewHolder>() {
     private var profiles = emptyList<Profile>()
 
@@ -33,10 +35,16 @@ class ProfileListAdapter(
                 onDelete(profile)
             }
             itemView.onClick {
+                opening.value = true
                 onOpen(profile)
             }
             itemView.onLongClick {
+                opening.value = true
                 onModify(profile)
+            }
+            opening.observeForever {
+                delete.isEnabled = !it
+                itemView.isEnabled = !it
             }
         }
     }

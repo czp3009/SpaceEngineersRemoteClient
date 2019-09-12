@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.ScrollView
 import android.widget.TextView
@@ -103,6 +104,15 @@ class ChatFragment : Fragment() {
         }
 
         return view
+    }
+
+    override fun onPause() {
+        super.onPause()
+        val windowToken = requireActivity().currentFocus?.windowToken
+        if (windowToken != null) {
+            requireContext().getSystemService(InputMethodManager::class.java)
+                .hideSoftInputFromWindow(windowToken, 0)
+        }
     }
 }
 
