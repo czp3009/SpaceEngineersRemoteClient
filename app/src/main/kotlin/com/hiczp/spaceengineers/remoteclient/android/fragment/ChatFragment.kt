@@ -10,7 +10,6 @@ import android.widget.ScrollView
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.map
 import androidx.lifecycle.observe
 import androidx.lifecycle.viewModelScope
 import com.hiczp.spaceengineers.remoteapi.SpaceEngineersRemoteClient
@@ -111,8 +110,8 @@ class ChatFragment : Fragment() {
             }
         }
 
-        model.sendButtonEnable.observe(this) {
-            sendButton.isEnabled = it
+        model.form["input"]!!.second.observe(this) {
+            sendButton.isEnabled = it.isNotEmpty()
         }
         sendButton.onClick {
             val inputText = model["input"]!!
@@ -137,7 +136,6 @@ class ChatFragment : Fragment() {
 class ChatViewModel : FormViewModel() {
     private lateinit var vRageViewModel: VRageViewModel
     private lateinit var client: SpaceEngineersRemoteClient
-    val sendButtonEnable by lazy { form["input"]!!.second.map { it.isNotEmpty() } }
 
     fun init(vRageViewModel: VRageViewModel) {
         this.vRageViewModel = vRageViewModel
