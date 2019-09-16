@@ -30,6 +30,7 @@ import org.jetbrains.anko.support.v4.UI
 class ChatFragment : Fragment() {
     private lateinit var vRageViewModel: VRageViewModel
     private lateinit var model: ChatViewModel
+    private lateinit var scrollView: ScrollView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,7 +46,6 @@ class ChatFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        lateinit var scrollView: ScrollView
         lateinit var content: TextView
         lateinit var sendButton: Button
         val view = UI {
@@ -70,6 +70,11 @@ class ChatFragment : Fragment() {
             }
         }.view
 
+        //rebuild UI
+        if (savedInstanceState != null) {
+            scrollView.scrollY = savedInstanceState.getInt("scrollY")
+        }
+
         //input method
         var inputMethodOpen = false
         var previousBottomDifference = 0
@@ -88,6 +93,7 @@ class ChatFragment : Fragment() {
             }
         }
 
+        //new messages incoming
         var previousLine = 0
         vRageViewModel.chatMessages.observe(this@ChatFragment) { messages ->
             if (content.hint.isNotEmpty()) content.hint = ""
@@ -110,7 +116,8 @@ class ChatFragment : Fragment() {
             }
         }
 
-        model.form["input"]!!.second.observe(this) {
+        //sendButton
+        model.observe("input", this) {
             sendButton.isEnabled = it.isNotEmpty()
         }
         sendButton.onClick {
@@ -129,6 +136,11 @@ class ChatFragment : Fragment() {
             requireContext().getSystemService(InputMethodManager::class.java)
                 .hideSoftInputFromWindow(windowToken, 0)
         }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt("scrollY", scrollView.scrollY)
     }
 }
 

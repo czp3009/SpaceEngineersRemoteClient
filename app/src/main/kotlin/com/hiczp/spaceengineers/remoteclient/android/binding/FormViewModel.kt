@@ -21,6 +21,12 @@ open class FormViewModel : ViewModel() {
         form[fieldName]?.second?.value = value
     }
 
+    fun observe(
+        fieldName: String,
+        owner: LifecycleOwner,
+        onChanged: (String) -> Unit
+    ) = form[fieldName]!!.second.observe(owner, onChanged)
+
     fun validate() = form.asSequence().map { (fieldName, triple) ->
         val (textView, liveData, validator) = triple
         Triple(fieldName, textView, validator(liveData.value ?: ""))

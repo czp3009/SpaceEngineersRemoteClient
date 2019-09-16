@@ -75,8 +75,8 @@ class CharactersFragment : Fragment() {
         return view
     }
 
-    override fun onStart() {
-        super.onStart()
+    override fun onResume() {
+        super.onResume()
         model.tryFirstRefresh()
     }
 }

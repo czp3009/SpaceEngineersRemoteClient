@@ -3,8 +3,11 @@ package com.hiczp.spaceengineers.remoteclient.android.activity
 import android.graphics.Color
 import android.os.Bundle
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Toolbar
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.children
+import androidx.core.view.get
 import androidx.lifecycle.*
 import androidx.viewpager.widget.ViewPager
 import com.google.android.material.tabs.TabLayout
@@ -17,9 +20,9 @@ import com.hiczp.spaceengineers.remoteclient.android.extension.Ticks
 import com.hiczp.spaceengineers.remoteclient.android.extension.error
 import com.hiczp.spaceengineers.remoteclient.android.fragment.*
 import io.ktor.client.engine.okhttp.OkHttp
+import io.ktor.client.features.ClientRequestException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -61,6 +64,10 @@ class VRageActivity : AppCompatActivity() {
         }
         tabLayout.setupWithViewPager(viewPager)
 
+        model.serverAlive.observe(this) { alive ->
+            (tabLayout[0] as ViewGroup).children.forEach { it.isClickable = alive }
+        }
+
         model.error.observe(this) {
             alert(it.message ?: it.toString()) {
                 title = "Error"
@@ -93,6 +100,7 @@ class VRageActivity : AppCompatActivity() {
 
 class VRageViewModel : ViewModel() {
     private val spaceEngineersRemoteClient = MutableLiveData<SpaceEngineersRemoteClient>()
+    val serverAlive = MutableLiveData(false)
     val error = MutableLiveData<Throwable>()
     val serverStatus = MutableLiveData<Status>()
     val chatMessages = MutableLiveData<MutableList<Message>>()
@@ -105,12 +113,28 @@ class VRageViewModel : ViewModel() {
                 logger.error(throwable)
                 error.postValue(throwable)
             }) {
+                //ping
+                try {
+                    it.server.ping()
+                } catch (e: ClientRequestException) {
+                    throw SecurityException("Invalid security key")
+                }
+                serverAlive.postValue(true)
+                //pulse producer
+                launch {
+                    while (true) {
+                        chatMessagePulse.send(Unit)
+                        delay(3_000)
+                    }
+                }
+                //server status
                 while (true) {
                     it.server.serverStatus().data.run(serverStatus::postValue)
                     delay(10_000)
                 }
             }
         }
+
         //chat
         spaceEngineersRemoteClient.observeForever { client ->
             viewModelScope.launch(IO) {
@@ -134,12 +158,6 @@ class VRageViewModel : ViewModel() {
                     } catch (e: Exception) {
 
                     }
-                }
-            }
-            viewModelScope.launch(Default) {
-                while (true) {
-                    chatMessagePulse.send(Unit)
-                    delay(3_000)
                 }
             }
         }
