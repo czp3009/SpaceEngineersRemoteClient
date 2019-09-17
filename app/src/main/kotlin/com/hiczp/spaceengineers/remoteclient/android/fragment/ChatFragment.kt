@@ -23,6 +23,8 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
 import org.jetbrains.anko.*
 import org.jetbrains.anko.sdk27.coroutines.onClick
+import org.jetbrains.anko.sdk27.coroutines.onLayoutChange
+import org.jetbrains.anko.sdk27.coroutines.onScrollChange
 import org.jetbrains.anko.support.v4.UI
 
 class ChatFragment : Fragment() {
@@ -54,8 +56,7 @@ class ChatFragment : Fragment() {
                     content = textView {
                         hint = "Loading..."
                     }
-                }.lparams {
-                    width = matchParent
+                }.lparams(matchParent) {
                     weight = 1f
                 }
 
@@ -68,23 +69,23 @@ class ChatFragment : Fragment() {
             }
         }.view
 
-//        //input method
-//        var inputMethodOpen = false
-//        var previousBottomDifference = 0
-//        scrollView.onScrollChange { _, _, scrollY, _, _ ->
-//            if (!inputMethodOpen) {
-//                previousBottomDifference = content.bottom - (scrollView.height + scrollY)
-//            }
-//        }
-//        scrollView.onLayoutChange { _, _, _, _, bottom, _, _, _, oldBottom ->
-//            if (oldBottom != 0 && oldBottom != bottom) {
-//                scrollView.scrollTo(
-//                    scrollView.scrollX,
-//                    content.bottom - scrollView.height - previousBottomDifference
-//                )
-//                inputMethodOpen = oldBottom > bottom
-//            }
-//        }
+        //input method
+        var inputMethodOpen = false
+        var previousBottomDifference = 0
+        scrollView.onScrollChange { _, _, scrollY, _, _ ->
+            if (!inputMethodOpen) {
+                previousBottomDifference = content.bottom - (scrollView.height + scrollY)
+            }
+        }
+        scrollView.onLayoutChange { _, _, _, _, bottom, _, _, _, oldBottom ->
+            if (oldBottom != 0 && oldBottom != bottom) {
+                scrollView.scrollTo(
+                    scrollView.scrollX,
+                    content.bottom - scrollView.height - previousBottomDifference
+                )
+                inputMethodOpen = oldBottom > bottom
+            }
+        }
 
         //new messages incoming
         var firstTimeReceiveMessage = true

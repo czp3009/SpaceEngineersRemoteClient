@@ -8,6 +8,7 @@ android {
         applicationId "com.hiczp.spaceengineers.remoteclient.android"
         minSdkVersion 28
         targetSdkVersion 28
+        vectorDrawables.useSupportLibrary = true
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -81,6 +82,8 @@ dependencies {
     implementation group: 'org.jetbrains.anko', name: 'anko-design', version: anko_version
     // https://mvnrepository.com/artifact/org.jetbrains.anko/anko-recyclerview-v7
     implementation group: 'org.jetbrains.anko', name: 'anko-recyclerview-v7', version: anko_version
+    // https://mvnrepository.com/artifact/org.jetbrains.anko/anko-constraint-layout
+    implementation group: 'org.jetbrains.anko', name: 'anko-constraint-layout', version: anko_version
 }
 
 //space-engineers
