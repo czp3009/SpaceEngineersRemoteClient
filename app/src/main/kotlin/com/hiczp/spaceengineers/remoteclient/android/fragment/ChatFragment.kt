@@ -23,8 +23,6 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
 import org.jetbrains.anko.*
 import org.jetbrains.anko.sdk27.coroutines.onClick
-import org.jetbrains.anko.sdk27.coroutines.onLayoutChange
-import org.jetbrains.anko.sdk27.coroutines.onScrollChange
 import org.jetbrains.anko.support.v4.UI
 
 class ChatFragment : Fragment() {
@@ -70,33 +68,29 @@ class ChatFragment : Fragment() {
             }
         }.view
 
-        //rebuild UI
-        if (savedInstanceState != null) {
-            scrollView.scrollY = savedInstanceState.getInt("scrollY")
-        }
-
-        //input method
-        var inputMethodOpen = false
-        var previousBottomDifference = 0
-        scrollView.onScrollChange { _, _, scrollY, _, _ ->
-            if (!inputMethodOpen) {
-                previousBottomDifference = content.bottom - (scrollView.height + scrollY)
-            }
-        }
-        scrollView.onLayoutChange { _, _, _, _, bottom, _, _, _, oldBottom ->
-            if (oldBottom != 0 && oldBottom != bottom) {
-                scrollView.scrollTo(
-                    scrollView.scrollX,
-                    content.bottom - scrollView.height - previousBottomDifference
-                )
-                inputMethodOpen = oldBottom > bottom
-            }
-        }
+//        //input method
+//        var inputMethodOpen = false
+//        var previousBottomDifference = 0
+//        scrollView.onScrollChange { _, _, scrollY, _, _ ->
+//            if (!inputMethodOpen) {
+//                previousBottomDifference = content.bottom - (scrollView.height + scrollY)
+//            }
+//        }
+//        scrollView.onLayoutChange { _, _, _, _, bottom, _, _, _, oldBottom ->
+//            if (oldBottom != 0 && oldBottom != bottom) {
+//                scrollView.scrollTo(
+//                    scrollView.scrollX,
+//                    content.bottom - scrollView.height - previousBottomDifference
+//                )
+//                inputMethodOpen = oldBottom > bottom
+//            }
+//        }
 
         //new messages incoming
+        var firstTimeReceiveMessage = true
         var previousLine = 0
         vRageViewModel.chatMessages.observe(this@ChatFragment) { messages ->
-            if (content.hint.isNotEmpty()) content.hint = ""
+            if (firstTimeReceiveMessage) content.hint = ""
             if (messages.size > previousLine) {
                 val nowInEnd = content.bottom == scrollView.height + scrollView.scrollY
                 val currentLine = messages.size
@@ -109,11 +103,19 @@ class ChatFragment : Fragment() {
                     }
                 )
                 previousLine = currentLine
-                //auto scroll to end if in end before append
-                if (nowInEnd) scrollView.post {
-                    scrollView.fullScroll(View.FOCUS_DOWN)
+
+                val savedScrollY = model.scrollY
+                if (firstTimeReceiveMessage && savedScrollY != null) {  //rebuild UI
+                    scrollView.post {
+                        scrollView.scrollY = savedScrollY
+                    }
+                } else if (nowInEnd) {  //auto scroll
+                    scrollView.post {
+                        scrollView.fullScroll(View.FOCUS_DOWN)
+                    }
                 }
             }
+            firstTimeReceiveMessage = false
         }
 
         //sendButton
@@ -124,6 +126,8 @@ class ChatFragment : Fragment() {
             val inputText = model["input"]!!
             model["input"] = ""
             model.sendMessage(inputText)
+            //scroll to end after message send
+            scrollView.fullScroll(View.FOCUS_DOWN)
         }
 
         return view
@@ -136,11 +140,8 @@ class ChatFragment : Fragment() {
             requireContext().getSystemService(InputMethodManager::class.java)
                 .hideSoftInputFromWindow(windowToken, 0)
         }
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.putInt("scrollY", scrollView.scrollY)
+        //status
+        model.scrollY = scrollView.scrollY
     }
 }
 
@@ -148,6 +149,7 @@ class ChatFragment : Fragment() {
 class ChatViewModel : FormViewModel() {
     private lateinit var vRageViewModel: VRageViewModel
     private lateinit var client: SpaceEngineersRemoteClient
+    var scrollY: Int? = null
 
     fun init(vRageViewModel: VRageViewModel) {
         this.vRageViewModel = vRageViewModel
