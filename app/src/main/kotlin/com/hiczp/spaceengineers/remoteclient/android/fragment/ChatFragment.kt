@@ -9,6 +9,7 @@ import android.widget.Button
 import android.widget.ScrollView
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.observe
 import androidx.lifecycle.viewModelScope
@@ -23,9 +24,8 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
 import org.jetbrains.anko.*
 import org.jetbrains.anko.sdk27.coroutines.onClick
-import org.jetbrains.anko.sdk27.coroutines.onLayoutChange
-import org.jetbrains.anko.sdk27.coroutines.onScrollChange
 import org.jetbrains.anko.support.v4.UI
+import org.jetbrains.anko.support.v4.longToast
 
 class ChatFragment : Fragment() {
     private lateinit var vRageViewModel: VRageViewModel
@@ -69,23 +69,27 @@ class ChatFragment : Fragment() {
             }
         }.view
 
-        //input method
-        var inputMethodOpen = false
-        var previousBottomDifference = 0
-        scrollView.onScrollChange { _, _, scrollY, _, _ ->
-            if (!inputMethodOpen) {
-                previousBottomDifference = content.bottom - (scrollView.height + scrollY)
-            }
+        model.error.observe(this) {
+            longToast(it)
         }
-        scrollView.onLayoutChange { _, _, _, _, bottom, _, _, _, oldBottom ->
-            if (oldBottom != 0 && oldBottom != bottom) {
-                scrollView.scrollTo(
-                    scrollView.scrollX,
-                    content.bottom - scrollView.height - previousBottomDifference
-                )
-                inputMethodOpen = oldBottom > bottom
-            }
-        }
+
+//        //input method
+//        var inputMethodOpen = false
+//        var previousBottomDifference = 0
+//        scrollView.onScrollChange { _, _, scrollY, _, _ ->
+//            if (!inputMethodOpen) {
+//                previousBottomDifference = content.bottom - (scrollView.height + scrollY)
+//            }
+//        }
+//        scrollView.onLayoutChange { _, _, _, _, bottom, _, _, _, oldBottom ->
+//            if (oldBottom != 0 && oldBottom != bottom) {
+//                scrollView.scrollTo(
+//                    scrollView.scrollX,
+//                    content.bottom - scrollView.height - previousBottomDifference
+//                )
+//                inputMethodOpen = oldBottom > bottom
+//            }
+//        }
 
         //new messages incoming
         var firstTimeReceiveMessage = true
@@ -150,6 +154,7 @@ class ChatFragment : Fragment() {
 class ChatViewModel : FormViewModel() {
     private lateinit var vRageViewModel: VRageViewModel
     private lateinit var client: SpaceEngineersRemoteClient
+    val error = MutableLiveData<String>()
     var scrollY: Int? = null
 
     fun init(vRageViewModel: VRageViewModel) {
@@ -158,7 +163,12 @@ class ChatViewModel : FormViewModel() {
     }
 
     fun sendMessage(message: String) = viewModelScope.launch(IO + emptyCoroutineExceptionHandler) {
-        client.session.sendMessage(message)
+        try {
+            client.session.sendMessage(message)
+        } catch (e: Exception) {
+            error.postValue(e.message ?: e.toString())
+            throw e
+        }
         vRageViewModel.chatMessagePulse.send(Unit)
     }
 }
