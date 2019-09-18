@@ -44,7 +44,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             createButton = floatingActionButton {
-                setImageResource(android.R.drawable.ic_input_add)
+                setImageResource(R.drawable.ic_add_white)
             }.lparams {
                 gravity = Gravity.END + Gravity.BOTTOM
                 margin = dip(12)
