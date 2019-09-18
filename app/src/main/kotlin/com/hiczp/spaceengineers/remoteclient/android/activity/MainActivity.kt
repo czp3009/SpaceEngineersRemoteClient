@@ -71,6 +71,9 @@ class MainActivity : AppCompatActivity() {
             }
         )
         recycleView.adapter = profileListAdapter
+//        recycleView.swipeToDismiss {
+//            profileListAdapter.notifyItemRemoved(it)
+//        }
         model.profiles.observe(this) {
             profileListAdapter.setProfiles(it)
         }
