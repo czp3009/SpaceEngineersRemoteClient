@@ -10,17 +10,16 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.observe
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.appbar.AppBarLayout
 import com.hiczp.spaceengineers.remoteclient.android.*
 import com.hiczp.spaceengineers.remoteclient.android.adapter.ProfileListAdapter
+import com.hiczp.spaceengineers.remoteclient.android.extension.horizontalRecyclerView
 import com.hiczp.spaceengineers.remoteclient.android.layout.defaultAppBar
 import org.jetbrains.anko.*
 import org.jetbrains.anko.constraint.layout.constraintLayout
 import org.jetbrains.anko.design.coordinatorLayout
 import org.jetbrains.anko.design.floatingActionButton
-import org.jetbrains.anko.recyclerview.v7.recyclerView
 import org.jetbrains.anko.sdk27.coroutines.onClick
 
 class MainActivity : AppCompatActivity() {
@@ -36,9 +35,7 @@ class MainActivity : AppCompatActivity() {
             defaultAppBar().lparams(matchParent)
 
             constraintLayout {
-                recycleView = recyclerView {
-                    layoutManager = LinearLayoutManager(context)
-                }.lparams(matchParent)
+                recycleView = horizontalRecyclerView().lparams(matchParent)
             }.lparams(matchParent) {
                 behavior = AppBarLayout.ScrollingViewBehavior()
             }
